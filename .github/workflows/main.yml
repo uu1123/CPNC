@@ -1,23 +1,57 @@
 name: CICD_CPNC
+
 on:
   push:
+    branches:
+      - main
+      - master
+
   pull_request:
+    branches:
+      - main
+      - master
+
 jobs:
   test:
+
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
+
+      # 1. Get the source code from GitHub
+      - name: Checkout repository
         uses: actions/checkout@v4
+
+      # 2. Install Python
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Install pytest
+          cache: "pip"
+
+      # 3. Upgrade pip
+      - name: Upgrade pip
         run: |
           python -m pip install --upgrade pip
-          python -m pip install pytest
+
+      # 4. Install project dependencies
+      - name: Install dependencies
+        run: |
+          python -m pip install -r requirements.txt
+
+      # 5. Check installed packages
+      - name: Check installed packages
+        run: |
+          python --version
+          pip --version
+          pip show pytest
+          pip show requests
+
+      # 6. Run pytest
       - name: Run tests
-        run: python -m pytest -v 
+        run: |
+          python -m pytest -v
+ 
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
       - name: Build and Push Docker Image
